@@ -3,4 +3,4 @@
             [articulated_scene]))
 (deftest namespace-loads
   (testing "the restored CLJC namespace loads"
-    (is (some? articulated_scene))))
+    (is (some? (find-ns 'articulated_scene)))))
