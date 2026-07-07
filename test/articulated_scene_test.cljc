@@ -21,12 +21,16 @@
   (when-let [m (re-find (re-pattern (str k "=\"([^\"]*)\"")) tag-str)]
     (second m)))
 
+(defn- parse-double* [s]
+  #?(:clj (Double/parseDouble s)
+     :cljs (js/parseFloat s)))
+
 (defn- attr-num [tag-str k default]
-  (if-let [v (attr tag-str k)] (Double/parseDouble v) default))
+  (if-let [v (attr tag-str k)] (parse-double* v) default))
 
 (defn- parse-xyz [tag-str k]
   (if-let [v (attr tag-str k)]
-    (mapv #(Double/parseDouble %) (str/split (str/trim v) #"\s+"))
+    (mapv parse-double* (str/split (str/trim v) #"\s+"))
     [0.0 0.0 0.0]))
 
 (defn- find-tags [xml tag]
@@ -109,7 +113,7 @@
 
 (deftest namespace-loads
   (testing "the restored CLJC namespace loads"
-    (is (some? (the-ns 'articulated_scene)))))
+    (is (some? (find-ns 'articulated_scene)))))
 
 (deftest from-edn-parses-giemon-arm6
   (let [s (scene/giemon-arm6)]
@@ -183,5 +187,5 @@
   (try
     (scene/bom-from-edn scene/giemon-arm6-edn "no-such-variant")
     (is false "expected ex-info to be thrown")
-    (catch clojure.lang.ExceptionInfo e
+    (catch #?(:clj clojure.lang.ExceptionInfo :cljs ExceptionInfo) e
       (is (= :no-bom (:error/type (ex-data e)))))))
